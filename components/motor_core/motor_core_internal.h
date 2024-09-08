@@ -1,0 +1,6 @@
+#ifndef MOTORCOREINTERNAL_H
+#define MOTORCOREINTERNAL_H
+
+
+
+#endif
