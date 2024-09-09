@@ -104,7 +104,6 @@ int run_process(int (*eval)(void), struct process *process)
         while (status < 0)
         {
             status = eval();
-            printf("eval %d\n", status);
         }
 
         vTaskDelete(handle);

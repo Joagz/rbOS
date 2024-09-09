@@ -10,7 +10,9 @@ void process_fun(void *param)
 {
     for (;;)
     {
-        printf("flag : %d\n", flag);
+
+        // Do something
+
     }
 }
 
