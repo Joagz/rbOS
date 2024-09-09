@@ -17,16 +17,17 @@ This list has the type of priority of the process
 that will be run.
 
 */
+#define PROCESS_MANAGER_SAFE_MODE
 
-#define PROCESS_TYPE_LENGTH 3 // update along with PML
+#define PROCESS_TYPE_LENGTH 3
 
-#define PROCESS_MODE_SKIP                   0x00
-#define PROCESS_MODE_HIGH_PRIORITY          0x01
-#define PROCESS_MODE_WAIT_FOR_CONDITIONS    0x02
-// ... could go on
+#define PROCESS_MODE_SKIP 0x00               // 0b00000000
+#define PROCESS_MODE_EVAL 0x01               // 0b00000001
+#define PROCESS_MODE_HIGH_PRIORITY 0x02      // 0b00000010
+#define PROCESS_MODE_HIGH_PRIORITY_EVAL 0x03 // 0b00000011
 
-#define PROCESS_EXIT_SUCCESS    0x00
-#define PROCESS_NO_EXECUTED     0x01
+#define PROCESS_EXIT_SUCCESS 0x00
+#define PROCESS_NO_EXECUTED 0x01
 
 typedef uint8_t process_type_t;
 
@@ -36,10 +37,14 @@ struct process
     process_type_t process_mode;
     const char *process_name;
     void *process_params;
+    UBaseType_t process_priority;
 };
 
+/* Create a new process struct (allocated in the heap, run *free_process to free it)*/
 struct process *new_process(TaskFunction_t function, void *params, const char *name, process_type_t process_type);
+/* run a process with an evaluation function if required (NULL if not, but might be unsafe if not killed it manually) */
 int run_process(int (*eval)(void), struct process *process);
-
+/* free a process struct */
+void free_process(void *process);
 
 #endif

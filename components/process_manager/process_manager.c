@@ -5,8 +5,6 @@
 #define PROCESS_MANAGER_TAG "PROCESS_MANAGER"
 #define MAX_STACK_SIZE_PER_TASK_B 4096
 
-struct process *new_process(TaskFunction_t function, void *params, const char *name, process_type_t process_type);
-
 int checkProcessType(process_type_t type)
 {
     if (type > PROCESS_TYPE_LENGTH)
@@ -17,26 +15,6 @@ int checkProcessType(process_type_t type)
     return 0;
 }
 
-/*
-Create a new process structure, if the function has no params, the value passed should be a pointer
-to an int of value 1.
-
-example:
-
-... function to register as process
-
-void myfun(int v);
-
-... in your caller function
-
-void* ptr = NULL;
-int v = 1;
-ptr = &v;
-
-struct process* p = new_process(myfun, ptr, "myfunName", PROCESS_MODE_ANY);
-
-Otherwise, the function will return NULL as params are NULL
-*/
 struct process *new_process(TaskFunction_t function, void *params, const char *name, process_type_t type)
 {
     if (checkProcessType(type) < 0)
@@ -55,10 +33,24 @@ struct process *new_process(TaskFunction_t function, void *params, const char *n
     p->process_name = name;
     p->process_params = params;
     p->process_mode = type;
+    p->process_priority = tskIDLE_PRIORITY + 1;
     return p;
 }
 
-// Register new process
+void free_process(void *process)
+{
+    struct process *p = (struct process *)process;
+
+    ESP_LOGD(PROCESS_MANAGER_TAG, "Freeing process '%s'", p->process_name);
+
+    if (process == NULL)
+    {
+        return;
+    }
+
+    free(process);
+}
+
 TaskHandle_t register_process(TaskFunction_t function, const char *name, void *const params, process_type_t process_type, UBaseType_t priority)
 {
     TaskHandle_t handle = NULL;
@@ -71,35 +63,66 @@ TaskHandle_t register_process(TaskFunction_t function, const char *name, void *c
         return NULL;
     }
 
-    // decide what to do with the task handler
+    return handle;
+}
+
+TaskHandle_t exec_process(struct process *process)
+{
+    TaskHandle_t handle = NULL;
+    ESP_LOGD(PROCESS_MANAGER_TAG, "[%s] Starting new process", process->process_name);
+
+    if ((handle = register_process(process->process_code, process->process_name, process->process_params, process->process_mode, process->process_priority)) == NULL)
+    {
+        ESP_LOGD(PROCESS_MANAGER_TAG, "[%s] Failed to register process", process->process_name);
+        return NULL;
+    }
+
     return handle;
 }
 
 int run_process(int (*eval)(void), struct process *process)
 {
     int status = -PROCESS_NO_EXECUTED;
-    int priority = tskIDLE_PRIORITY + 1; // low priority
 
     TaskHandle_t handle = NULL;
 
-    if (process->process_mode == PROCESS_MODE_HIGH_PRIORITY)
-        priority = configMAX_PRIORITIES - 1;
+    if ((process->process_mode & PROCESS_MODE_HIGH_PRIORITY) == PROCESS_MODE_HIGH_PRIORITY)
+        process->process_priority = configMAX_PRIORITIES - 1;
 
-    if ((handle = register_process(process->process_code, process->process_name, process->process_params, process->process_mode, priority)) == NULL)
+    if (eval == NULL)
     {
-        goto out;
+        ESP_LOGD(PROCESS_MANAGER_TAG, "WARNING: evaluation function is null for process name '%s'", process->process_name);
+
+#ifdef PROCESS_MANAGER_SAFE_MODE
+        free_process(process);
+        return -PROCESS_NO_EXECUTED;
+#endif
     }
 
-    ESP_LOGD(PROCESS_MANAGER_TAG, "Selecting for process mode");
+    ESP_LOGD(PROCESS_MANAGER_TAG, "[%s] Checking process mode", process->process_name);
 
-    if (process->process_mode == PROCESS_MODE_SKIP)
+    if (eval == NULL || process->process_mode == PROCESS_MODE_SKIP)
     {
+        handle = exec_process(process);
+        if (handle == NULL)
+        {
+            return -PROCESS_NO_EXECUTED;
+        }
+
+        ESP_LOGV(PROCESS_MANAGER_TAG, "PROCESS_MODE_SKIP");
+
         vTaskDelete(handle);
     }
-    else if (process->process_mode == PROCESS_MODE_WAIT_FOR_CONDITIONS)
+    else if ((process->process_mode & PROCESS_MODE_EVAL) == PROCESS_MODE_EVAL)
     {
-        // Here we should check for physical conditions or other conditions depending on process_type
-        ESP_LOGD(PROCESS_MANAGER_TAG, "Waiting for condition");
+        handle = exec_process(process);
+
+        if (handle == NULL)
+        {
+            return -PROCESS_NO_EXECUTED;
+        }
+
+        ESP_LOGV(PROCESS_MANAGER_TAG, "PROCESS_MODE_EVAL");
 
         while (status < 0)
         {
@@ -109,6 +132,10 @@ int run_process(int (*eval)(void), struct process *process)
         vTaskDelete(handle);
     }
 
-out:
+    if (process != NULL)
+    {
+        free_process(process);
+    }
+
     return status;
 }

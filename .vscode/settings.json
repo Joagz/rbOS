@@ -2,6 +2,8 @@
   "C_Cpp.intelliSenseEngine": "default",
   "files.associations": {
     "process_manager.h": "c",
-    "freertos.h": "c"
-  }
+    "freertos.h": "c",
+    "cstdint": "c"
+  },
+  "idf.adapterTargetName": "esp32"
 }

@@ -10,9 +10,7 @@ void process_fun(void *param)
 {
     for (;;)
     {
-
         // Do something
-
     }
 }
 
@@ -31,6 +29,6 @@ void app_main(void)
 {
     static uint8_t ucParameterToPass;
 
-    struct process *p = new_process(process_fun, &ucParameterToPass, "ProcessFunction", PROCESS_MODE_WAIT_FOR_CONDITIONS);
-    run_process(eval, p); // blocks
+    struct process *p = new_process(process_fun, &ucParameterToPass, "ProcessFunction", PROCESS_MODE_EVAL);
+    run_process(NULL, p);
 }
