@@ -8,7 +8,11 @@
     "movement_planner.h": "c",
     "cmath": "c",
     "complex": "c",
-    "algebra.h": "c"
+    "algebra.h": "c",
+    "pqueue.h": "c",
+    "stdbool.h": "c",
+    "math.h": "c",
+    "commons.h": "c"
   },
   "idf.adapterTargetName": "esp32"
 }

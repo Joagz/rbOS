@@ -3,6 +3,7 @@
 
 static node_t *CURRENT_END_NODE = NULL;
 static struct plane_map *CURRENT_MAP = NULL;
+static double CURRENT_ANGLE_DEGREES_FROM_NORTH = 0; // our actual angle
 
 void print_debug(const char *fn_name, const char *msg)
 {
@@ -12,6 +13,16 @@ void print_debug(const char *fn_name, const char *msg)
 void print_err(const char *fn_name, const char *msg)
 {
     printf("(E) %s: %s\n", fn_name, msg);
+}
+
+void set_CURRENT_ANGLE_RADIANS_FROM_NORTH(double angle_from_north)
+{
+    if (angle_from_north < 0 || angle_from_north >= 360)
+    {
+        print_err("set_CURRENT_ANGLE_RADIANS_FROM_NORTH", "invalid angle, must be between 0 and 360 not included.");
+        return;
+    }
+    CURRENT_ANGLE_DEGREES_FROM_NORTH = angle_from_north;
 }
 
 bool is_valid_coord(struct plane_map *p, int32_t x, int32_t y)
@@ -25,6 +36,15 @@ void print_closed_list(struct darr *CLOSED)
     {
         node_t *node = (node_t *)CLOSED->items[i];
         printf("ITEM %d: (%d, %d)\n", i, node->x, node->y);
+    }
+}
+
+void print_path(struct path_map *map)
+{
+    for (int i = 0; i < map->length; i++)
+    {
+        direction_t d = map->directions[i];
+        printf("#%d: ANGLE:%f\nIS_CLOCKWISE:%c\n\n", i, radian_to_degree(d.angle_rad), d.is_clockwise + 48);
     }
 }
 
@@ -331,12 +351,53 @@ struct path_map *generate_new_path(struct plane_map *p, int32_t start_x, int32_t
         }
     }
 
+    struct path_map *path = (struct path_map *)malloc(sizeof(struct path_map));
+    path->directions = (direction_t *)malloc(sizeof(direction_t) * CLOSED->length);
+    path->length = CLOSED->length - 1;
+
+    for (int i = 1; i < path->length; i++)
+    {
+        node_t *prev = (node_t *)CLOSED->items[i - 1];
+        node_t *cur = (node_t *)CLOSED->items[i];
+
+        node_t node;
+        node.x = cur->x - prev->x;
+        node.y = cur->y - prev->y;
+
+        if (!is_angle_valid_rad(degree_to_radian(CURRENT_ANGLE_DEGREES_FROM_NORTH)))
+        {
+            print_err("generate_new_path", "CURRENT_ANGLE_DEGREES_FROM_NORTH is invalid");
+            continue;
+        }
+
+        direction_t *direction = direction_from_angle(CURRENT_ANGLE_DEGREES_FROM_NORTH, &node);
+        if (direction == NULL)
+        {
+            print_err("generate_new_path", "DIRECTION IS NULL");
+            continue;
+        }
+
+        path->directions[i - 1] = *direction;
+        direction_free(direction);
+    }
+
     print_closed_list(CLOSED);
+    print_path(path);
 
     pqueue_free(OPEN);
-    darr_free(CLOSED);
 
+    return path;
+}
 
-    // TODO
-    return (struct path_map *)1;
+void free_path(struct path_map *path)
+{
+    free(path->directions);
+    free(path);
+}
+
+/* Returng a plane_map to start working with it and sets initial conditions */
+struct plane_map *movement_planner_init(int32_t start_x, int32_t start_y, double current_angle)
+{
+    set_CURRENT_ANGLE_RADIANS_FROM_NORTH(current_angle);
+    return new_plane_map(start_x, start_y);
 }
