@@ -51,32 +51,39 @@ double degrees_from_north(vector_t v)
     return acos(dot_product2d(v, vn) / (get_modulus(vn) * get_modulus(v)));
 }
 
-direction_t *direction_t_init(double angle, char direction)
+direction_t *direction_t_init(double angle, bool clockwise)
 {
     direction_t *d = (direction_t *)malloc(sizeof(direction_t));
     d->angle_rad = angle;
-    d->is_clockwise = false;
+    d->is_clockwise = clockwise;
     return d;
 }
 
-direction_t *direction_from_angle(double north_deg, node_t *v_o)
+direction_t *direction_from_angle(double last_angle, node_t *v_o)
 {
-    if (!is_angle_valid_rad(degree_to_radian(north_deg)))
+    if (!is_angle_valid_rad(degree_to_radian(last_angle)))
     {
         return NULL;
     }
 
     vector_t v = {.x = (double)v_o->x, .y = (double)v_o->y};
-    vector_t dir_v = {.x = cos(north_deg), .y = sin(north_deg)};
+    vector_t minusv = {.x = -(double)v_o->x, .y = -(double)v_o->y};
+    // vector_t dir_v = {.x = cos(last_angle), .y = sin(last_angle)};
 
-    double deg = degrees_from_north(v); // degrees of objective respect to north
+    double deg = degrees_from_north(v);
+    double deg_parallel = degrees_from_north(minusv);
 
-    char direction = evaluate_crossp2d(cross_product2d(v, dir_v, deg)); // evaluate direction
+    double final_angle = 2 * M_PI - deg;
+    bool clockwise = true;
 
-    double final_angle = 2 * M_PI - (deg + north_deg);
-    
+    // printf("%f, %f, %f\n", radian_to_degree(deg_parallel), last_angle, radian_to_degree(final_angle));
+    if (deg_parallel < degree_to_radian(last_angle) && degree_to_radian(last_angle) < final_angle)
+    {
+        clockwise = false;
+    }
+
     if (final_angle == 2 * M_PI)
         final_angle = 0;
 
-    return direction_t_init(final_angle, direction);
+    return direction_t_init(final_angle, clockwise);
 }

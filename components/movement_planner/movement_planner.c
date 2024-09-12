@@ -376,7 +376,7 @@ struct path_map *generate_new_path(struct plane_map *p, int32_t start_x, int32_t
             print_err("generate_new_path", "DIRECTION IS NULL");
             continue;
         }
-
+        set_CURRENT_ANGLE_RADIANS_FROM_NORTH(radian_to_degree(direction->angle_rad));
         path->directions[i - 1] = *direction;
         direction_free(direction);
     }
