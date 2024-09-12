@@ -110,8 +110,6 @@ int run_process(int (*eval)(void), struct process *process)
         }
 
         ESP_LOGV(PROCESS_MANAGER_TAG, "PROCESS_MODE_SKIP");
-
-        vTaskDelete(handle);
     }
     else if ((process->process_mode & PROCESS_MODE_EVAL) == PROCESS_MODE_EVAL)
     {
@@ -136,6 +134,7 @@ int run_process(int (*eval)(void), struct process *process)
     {
         free_process(process);
     }
+    ESP_LOGV(PROCESS_MANAGER_TAG, "returning");
 
     return status;
 }

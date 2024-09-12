@@ -4,7 +4,10 @@
     "process_manager.h": "c",
     "freertos.h": "c",
     "cstdint": "c",
-    "motor_core_interface.h": "c"
+    "motor_core_interface.h": "c",
+    "movement_planner.h": "c",
+    "cmath": "c",
+    "complex": "c"
   },
   "idf.adapterTargetName": "esp32"
 }

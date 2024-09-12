@@ -6,32 +6,30 @@
 #include <stdio.h>
 
 #include "process_manager.h"
+#include "movement_planner.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-int flag = 0;
-
 void process_fun(void *param)
 {
-    static int i = 1;
-    for (;;)
-    {
-        printf("COUNTER: %d\n", i);
-        vTaskDelay(pdMS_TO_TICKS(1000));
-        i++;
-    }
-}
+    struct plane_map *p = new_plane_map(10, 10);
 
-int eval()
-{
-    vTaskDelay(pdMS_TO_TICKS(10000));
-    return 0;
+    block_at(p, 7, 7);
+    block_at(p, 6, 7);
+    block_at(p, 5, 7);
+
+    generate_new_path(p, 0, 0, 8, 9);
+
+    free_plane_map(p);
+    
+    vTaskDelete(NULL);
 }
 
 void app_main(void)
 {
     static uint8_t ucParameterToPass;
 
-    struct process *p = new_process(process_fun, &ucParameterToPass, "ProcessFunction", PROCESS_MODE_EVAL);
-    run_process(eval, p);
+    struct process *p = new_process(process_fun, &ucParameterToPass, "ProcessFunction", PROCESS_MODE_SKIP);
+    run_process((eval_fn)NULL, p);
 }
