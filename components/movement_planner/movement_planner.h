@@ -35,6 +35,7 @@ typedef struct
     size_t pos;
 } node_t;
 
+// TODO
 struct path
 {
     node_t *nodes;

@@ -1,5 +1,4 @@
 #include "process_manager.h"
-
 #include "esp_log.h"
 
 #define PROCESS_MANAGER_TAG "PROCESS_MANAGER"

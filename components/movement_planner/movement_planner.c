@@ -19,6 +19,15 @@ bool is_valid_coord(struct plane_map *p, int32_t x, int32_t y)
     return !((y >= p->size_y || y < 0) || (x >= p->size_x || x < 0));
 }
 
+void print_closed_list(struct darr *CLOSED)
+{
+    for (int i = 0; i < CLOSED->length; i++)
+    {
+        node_t *node = (node_t *)CLOSED->items[i];
+        printf("ITEM %d: (%d, %d)\n", i, node->x, node->y);
+    }
+}
+
 node_t *get_at(struct plane_map *p, int32_t x, int32_t y)
 {
     if (!is_valid_coord(p, x, y))
@@ -171,11 +180,6 @@ int get_node_h_manhattan(int32_t start_x, int32_t start_y, int32_t end_x, int32_
     return abs(start_x - end_x) + abs(start_y - end_y);
 }
 
-float get_rotation_degrees(node_t a, node_t b)
-{
-    return 0.0f;
-}
-
 /* COMPARATION FUNCTIONS FOR PQUEUE */
 
 /*
@@ -234,15 +238,6 @@ int get_node_priority(node_t *ptr)
     }
     else
         return pri_e;
-}
-
-void print_closed_list(struct darr *CLOSED)
-{
-    for (int i = 0; i < CLOSED->length; i++)
-    {
-        node_t *node = (node_t *)CLOSED->items[i];
-        printf("ITEM %d: (%d, %d)\n", i, node->x, node->y);
-    }
 }
 
 struct path_map *generate_new_path(struct plane_map *p, int32_t start_x, int32_t start_y, int32_t end_x, int32_t end_y)
@@ -341,34 +336,7 @@ struct path_map *generate_new_path(struct plane_map *p, int32_t start_x, int32_t
     pqueue_free(OPEN);
     darr_free(CLOSED);
 
+
+    // TODO
     return (struct path_map *)1;
-}
-
-// example
-int main(int argc, char const *argv[])
-{
-    clock_t start_t, end_t;
-    double total_t;
-    start_t = clock();
-
-    struct plane_map *p = new_plane_map(10, 10);
-
-    block_at(p, 7, 7);
-    block_at(p, 6, 7);
-    block_at(p, 5, 7);
-
-    if (generate_new_path(p, 0, 0, 8, 9) == NULL)
-    {
-        free_plane_map(p);
-        return 0;
-    }
-
-    free_plane_map(p);
-
-    end_t = clock();
-
-    total_t = (double)(end_t - start_t) / CLOCKS_PER_SEC;
-    printf("Total time taken by CPU: %f\n", total_t);
-
-    return 0;
 }

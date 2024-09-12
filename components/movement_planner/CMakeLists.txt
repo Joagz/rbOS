@@ -4,9 +4,11 @@ idf_component_register(
     "linkedlist/linkedlist.c"
     "pqueue/pqueue.c"
     "queue/queue.c"
+    "algebra/algebra.c"
 
     INCLUDE_DIRS "."
     "./darr"
     "./linkedlist"
     "./pqueue"
-    "./queue")
+    "./queue"
+    "./algebra")
