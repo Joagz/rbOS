@@ -7,7 +7,7 @@
 
 #include "process_manager.h"
 #include "movement_planner.h"
-#include "algebra.h"
+#include "wifi_manager.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -29,9 +29,10 @@ void process_fun(void *param)
 
 void app_main(void)
 {
-    static uint8_t ucParameterToPass;
+	// wifi_init();
 
-    struct process *p = new_process(process_fun, &ucParameterToPass, "ProcessFunction", PROCESS_MODE_SKIP);
-    run_process((eval_fn)NULL, p);
+	static uint8_t ucParameterToPass;
 
+    	struct process *p = new_process(process_fun, &ucParameterToPass, "ProcessFunction", PROCESS_MODE_SKIP);
+    	run_process((eval_fn)NULL, p);
 }
